@@ -1,0 +1,430 @@
+Practical No. 1: Word Cloud for a Wikipedia Page
+
+from wordcloud import WordCloud, STOPWORDS
+import matplotlib.pyplot as plt
+import wikipedia as wp
+
+# Fetch Wikipedia page content
+result = wp.page("Data Science")  # Replace with any topic
+final_result = result.content
+print(final_result)
+
+# Function to plot word cloud
+def plot_wordcloud(wc):
+    plt.axis("off")
+    plt.figure(figsize=(10, 10))
+    plt.imshow(wc)
+    plt.show()
+
+# Generate word cloud
+wc = WordCloud(width=500, height=500, background_color="cyan", random_state=10, stopwords=STOPWORDS).generate(final_result)
+wc.to_file("ds.png")  # Save the word cloud as an image
+plot_wordcloud(wc)  # Display the word cloud
+-----------------------------------------------------------------------
+
+Practical No. 2: Web Scraping (HTML and JSON)
+import pandas as pd
+from bs4 import BeautifulSoup
+from urllib.request import urlopen
+
+# Fetch HTML content from a URL
+url = "https://en.wikipedia.org/wiki/List_of_Asian_countries_by_area"
+page = urlopen(url)
+html_page = page.read().decode("utf-8")
+print(html_page)
+
+# Parse HTML and extract table data
+soup = BeautifulSoup(html_page, "html.parser")
+table = soup.find("table")
+print(table)
+
+# Extract table rows and columns
+SrNo = []
+Country = []
+Area = []
+rows = table.find("tbody").find_all("tr")
+for row in rows:
+    cells = row.find_all("td")
+    if cells:
+        SrNo.append(cells[0].get_text().strip("\n"))
+        Country.append(cells[1].get_text().strip('\xa0').strip("\n"))
+        Area.append(cells[3].get_text().strip("\n").replace(",", ""))
+
+# Create a DataFrame
+df = pd.DataFrame()
+df["ID"] = SrNo
+df["Country"] = Country
+df["Area"] = Area
+print(df.head(10))
+
+#Code for JSON Scraping:
+
+import pandas as pd
+import json
+from urllib.request import urlopen
+
+# Fetch JSON data from a URL
+url = "https://jsonplaceholder.typicode.com/users"
+page = urlopen(url)
+data = json.loads(page.read())
+
+# Extract relevant fields
+ID = []
+Username = []
+Email = []
+for item in data:
+    ID.append(item.get("id", "NA"))
+    Username.append(item.get("username", "NA"))
+    Email.append(item.get("email", "NA"))
+
+# Create a DataFrame
+Users = pd.DataFrame()
+Users["id"] = ID
+Users["username"] = Username
+Users["email"] = Email
+print(Users.head(10))
+
+#pip install pandas beautifulsoup4
+-----------------------------------------------------------------------
+
+Practical No. 3: Exploratory Data Analysis (EDA) of mtcars.csv in R
+# R PRACTICAL
+
+# Load mtcars dataset
+data("mtcars")
+View(mtcars)
+str(mtcars)
+names(mtcars)
+row.names(mtcars)
+summary(mtcars)
+
+# Load dplyr library
+library(dplyr)
+
+# SELECT Function
+df1 <- select(mtcars, mpg:hp)
+df1 <- mtcars %>% select(mpg:hp)
+View(df1)
+
+# FILTER Function
+df3 <- mtcars %>% filter(gear == 4 & mpg > 20) %>% select(mpg, gear, disp)
+View(df3)
+
+# MUTATE Function
+df4 <- mtcars %>% mutate(Power = hp * wt)
+View(df4)
+
+# ARRANGE Function
+df5 <- mtcars %>% arrange(desc(mpg))
+View(df5)
+
+# RENAME Function
+df7 <- mtcars %>% rename(MilesPerGallons = mpg, Displacement = disp, cylinder = cyl) %>% select(MilesPerGallons, Displacement, cylinder)
+View(df7)
+
+# GROUP BY and SUMMARIZE
+mtcars$gear <- as.factor(mtcars$gear)
+df8 <- mtcars %>% group_by(mtcars$gear) %>% summarise(n = n(), mean_mpg = mean(mpg), mean_disp = mean(disp))
+print(df8)
+
+# Visualization
+hist(mtcars$mpg, main = "Histogram of MPG", col = "pink", border = "yellow", xlab = "Miles Per Gallon")
+barplot(table(mtcars$gear))
+boxplot(mtcars$mpg)
+plot(mtcars$mpg ~ mtcars$disp)
+
+install.packages("dplyr")
+
+-----------------------------------------------------------------------
+
+Practical No. 4: EDA of Titanic Dataset in Python
+
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load Titanic dataset
+titanic = pd.read_csv("train.csv")
+print(titanic.head())
+print(titanic.info())
+print(titanic.describe())
+print(titanic.isnull().sum())
+
+# Clean the dataset
+titanic_cleaned = titanic.drop(['PassengerId', 'Name', 'Ticket', 'Fare', 'Cabin'], axis=1)
+print(titanic_cleaned.info())
+
+# Visualize survival by gender
+sns.catplot(x="Sex", kind="count", hue="Survived", data=titanic_cleaned)
+print(titanic_cleaned.groupby(['Sex', 'Survived'])['Survived'].count())
+
+# Heatmap for gender and survival
+group1 = titanic_cleaned.groupby(['Sex', 'Survived'])
+gender_survived = group1.size().unstack()
+sns.heatmap(gender_survived, annot=True, fmt="d")
+
+# Heatmap for passenger class and survival
+group2 = titanic_cleaned.groupby(['Pclass', 'Survived'])
+pclass_survived = group2.size().unstack()
+sns.heatmap(pclass_survived, annot=True, fmt="d")
+
+# Impute missing age values
+def impute(cols):
+    Age = cols[0]
+    Pclass = cols[1]
+    if pd.isnull(Age):
+        if Pclass == 1:
+            return 38
+        elif Pclass == 2:
+            return 29
+        else:
+            return 24
+    else:
+        return Age
+
+titanic_cleaned['Age'] = titanic_cleaned[['Age', 'Pclass']].apply(impute, axis=1)
+print(titanic_cleaned.isnull().sum())
+
+# Correlation heatmap
+sns.heatmap(titanic_cleaned.corr(method='pearson'), annot=True, fmt='d', vmax=1)
+plt.show()
+
+#pip install pandas seaborn matplotlib
+
+-----------------------------------------------------------------------------------------------------------
+Practical No. 5A: Linear Regression (Employee Salary Prediction)
+
+import numpy as np
+from sklearn import datasets
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+
+# Generate synthetic data
+x, y, coef = datasets.make_regression(n_samples=100, n_features=1, noise=10, random_state=0)
+x = np.interp(x, (x.min(), x.max()), (0, 20))
+y = np.interp(y, (y.min(), y.max()), (20000, 150000))
+
+# Plot the data
+plt.plot(x, y, '.', label="Training data")
+plt.xlabel("Years of experience")
+plt.ylabel("Salary")
+plt.title("Experience vs Salary")
+
+# Fit linear regression model
+reg_model = LinearRegression()
+reg_model.fit(x, y)
+y_predicted = reg_model.predict(x)
+
+# Plot the regression line
+plt.plot(x, y_predicted, color="black")
+plt.show()
+
+# Create a DataFrame
+data = {'Experience': np.round(x.flatten()), "Salary": np.round(y)}
+df = pd.DataFrame(data)
+print(df.head(10))
+
+# Predict salary for a new experience value
+x1 = [[19]]
+y1 = reg_model.predict(x1)
+print(np.round(y1))
+
+#pip install numpy scikit-learn matplotlib pandas
+-----------------------------------------------------------------------------------------------------------
+
+Practical No. 5B: Linear Model (Y = 10 + 7x + e)
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.linear_model import LinearRegression
+
+# Generate synthetic data
+x = np.random.rand(100, 1)
+b0 = 10
+b1 = 7
+e = np.random.rand(100, 1)
+y = b0 + b1 * x + e
+
+# Fit linear regression model
+reg_model = LinearRegression()
+reg_model.fit(x, y)
+y_predicted = reg_model.predict(x)
+
+# Plot the data and regression line
+plt.scatter(x, y, s=10)
+plt.xlabel("X")
+plt.ylabel("Y")
+plt.plot(x, y_predicted, color="black")
+plt.show()
+#pip install numpy scikit-learn matplotlib
+-----------------------------------------------------------------------------------------------------------
+Practical No. 6: Multiple Linear Regression (Boston.csv)
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+
+# Load Boston dataset
+boston = pd.read_csv("Boston.csv")
+print(boston.head())
+print(boston.info())
+
+# Drop unnecessary column
+boston = boston.drop(columns="Unnamed: 0")
+print(boston.info())
+
+# Split data into features and target
+boston_x = boston.iloc[:, :13]
+boston_y = boston.iloc[:, -1]
+
+# Split data into training and testing sets
+X_train, X_test, Y_train, Y_test = train_test_split(boston_x, boston_y, test_size=0.3)
+print(f"X_train shape: {X_train.shape}")
+print(f"Y_train shape: {Y_train.shape}")
+print(f"X_test shape: {X_test.shape}")
+print(f"Y_test shape: {Y_test.shape}")
+
+# Fit linear regression model
+reg_model = LinearRegression()
+reg_model.fit(X_train, Y_train)
+Y_pred = reg_model.predict(X_test)
+
+# Plot actual vs predicted values
+plt.scatter(Y_test, Y_pred, c="green")
+plt.xlabel("Actual Price (medv)")
+plt.ylabel("Predicted Price (medv)")
+plt.title("Actual vs Predicted Price")
+plt.show()
+#pip install pandas scikit-learn matplotlib
+
+-----------------------------------------------------------------------------------------------------------
+Practical No. 7: Decision Tree (Titanic Dataset)
+# R LANGUAGE
+
+# Load Titanic dataset
+titanic <- read.csv("train.csv")
+View(titanic)
+dim(titanic)
+str(titanic)
+
+# Clean the dataset
+library(dplyr)
+cleaned_titanic <- titanic %>% select(-c("Cabin", "Ticket", "Fare", "Name", "PassengerId"))
+dim(cleaned_titanic)
+str(cleaned_titanic)
+
+# Convert columns to factors
+cleaned_titanic <- cleaned_titanic %>%
+  mutate(
+    Pclass = factor(Pclass, levels = c(1, 2, 3),
+    Survived = factor(Survived, levels = c(1, 0))
+  )
+
+# Remove rows with missing values
+cleaned_titanic <- na.omit(cleaned_titanic)
+str(cleaned_titanic)
+
+# Split data into training and testing sets
+dt <- sort(sample(nrow(cleaned_titanic), nrow(cleaned_titanic) * 0.7))
+titanic_train <- cleaned_titanic[dt, ]
+titanic_test <- cleaned_titanic[-dt, ]
+dim(titanic_train)
+dim(titanic_test)
+
+# Build decision tree model
+library(rpart)
+library(rpart.plot)
+titanic_model <- rpart(Survived ~ ., data = titanic_train, method = "class")
+rpart.plot(titanic_model, extra = 106)
+
+# Predict on test data
+predict_unseen <- predict(titanic_model, titanic_test, type = "class")
+print(predict_unseen)
+
+# Confusion matrix
+library(caret)
+con_mat <- confusionMatrix(predict_unseen, titanic_test$Survived)
+print(con_mat)
+
+install.packages("dplyr")
+install.packages("rpart")
+install.packages("rpart.plot")
+install.packages("caret")
+-----------------------------------------------------------------------------------------------------------
+
+Practical No. 8: KNN Algorithm (Breast Cancer Dataset)
+
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import accuracy_score
+
+# Load breast cancer dataset
+data = pd.read_csv("breast_cancer.csv")  # Replace with actual dataset
+print(data.head())
+
+# Split data into features and target
+X = data.drop(columns="target")
+y = data["target"]
+
+# Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Train KNN model
+knn = KNeighborsClassifier(n_neighbors=5)
+knn.fit(X_train, y_train)
+
+# Predict on test data
+y_pred = knn.predict(X_test)
+
+# Calculate accuracy
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Accuracy: {accuracy}")
+
+#pip install pandas scikit-learn
+-----------------------------------------------------------------------------------------------------------
+
+Practical No. 9: NoSQL using MongoDB
+
+#STEPS:
+#Create a db file in local disk c
+#GO TO THIS PATH: C:\Program Files\MongoDB\Server\4.4\bin
+#Open CMD here by typing cmd on the path
+#Type mongod to start mongodb
+#Open another cmd and start the practical
+
+# Create and use a database
+use employee
+
+# Insert a document
+db.empdata.insertOne({ empname: "AAA", desig: "Manager", salary: 40000 })
+
+# Query documents
+db.empdata.find()
+db.empdata.find().pretty()
+
+# Insert multiple documents
+db.inventory.insertMany([
+  { item: "book", qty: 25, status: "A" },
+  { item: "pen", qty: 50, status: "D" }
+])
+
+# Query with conditions
+db.inventory.find({ status: "A" })
+db.inventory.find({ status: { $in: ["A", "D"] } })
+db.inventory.find({ status: "A", qty: { $lt: 30 } })
+db.inventory.find({ $or: [{ status: "A" }, { qty: { $gt: 50 } } })
+
+# Update a document
+db.bookdata.update({ _id: "b103" }, { $set: { stock: 50 } })
+
+# Delete a document
+db.bookdata.remove({ _id: "b106" })
+
+
+
+
+
+
+
+
